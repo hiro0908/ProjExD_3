@@ -110,7 +110,7 @@ class Beam:
         self.img=pg.transform.rotozoom(self.img,angle,1.0)
         self.rct=self.img.get_rect()
         self.rct.centerx=bird.rct.centerx+bird.rct.width*self.vx/100
-        self.rct.centery=bird.rct.centery+bird.rct.width*self.vy/100
+        self.rct.centery=bird.rct.centery+bird.rct.height*self.vy/100
 
     def update(self, screen: pg.Surface):
         """
@@ -193,7 +193,7 @@ class explosion:
         引数 screen：画面Surface
         """
         if self.life>0:
-            self.index=(self.index+1)%2
+            self.index=(self.index+1)%2#画像の切り替え
             screen.blit(self.imgs[self.index],self.rct)
             self.life-=1
 
