@@ -164,6 +164,28 @@ class Score:
         self.img=self.fonto.render(f"スコア:{self.score}",0,self.color)
         screen.blit(self.img,self.rct)
 
+class explosion:
+    def __init__(self,center:tuple[int,int],):
+        """
+        引数：center:爆発の中心座標タプル
+        """
+        oriimg=pg.transform.rotozoom(pg.image.load("fig/explosion.gif"),0,1.0)
+        flipimg=pg.transform.flip(oriimg,True,True)
+        self.imgs=[oriimg,flipimg]
+        self.rct=self.imgs[0].get_rect()
+        self.rct.center=center
+        self.life=20
+        self.index=0
+    def update(self,screen:pg.Surface):
+        """
+        引数 screen：画面Surface
+        """
+        if self.life>0:
+            self.index=(self.index+1)%2
+            screen.blit(self.imgs[self.index],self.rct)
+            self.life-=1
+
+
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))    
@@ -177,6 +199,7 @@ def main():
     bombs=[Bomb((255,0,0),10)for _ in range(NUM_OF_BOMBS)]#　爆弾の数だけBombクラスのインスタンス生成
     score=Score()#スコアクラスのインスタンス生成
     beams=[]
+    explorers=[]
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -187,13 +210,16 @@ def main():
                 beams.append(beam)            
         screen.blit(bg_img, [0, 0])
         for i,beam in enumerate(beams):#各ビームのあたり判定とその処理
-            if bomb is not None:
-                if beam is not None:
-                    if bomb.rct.colliderect(beam.rct):
-                        beams[i]=None
-                        score.score+=1#得点取得の処理
-                        score.update(score)
-                        pg.display.update() 
+            for j,bomb in enumerate(bombs):
+                if bomb is not None:
+                    if beam is not None:
+                        if bomb.rct.colliderect(beam.rct):
+                            beams[i]=None
+                            bombs[j]=None
+                            score.score+=1#得点取得の処理
+                            explorers.append(explosion(bomb.rct.center))
+                            score.update(screen)
+                            pg.display.update() 
         beams=[beam for beam in beams if beam is not None]
         for b,bomb in enumerate(bombs):
             if bomb is not None and bird.rct.colliderect(bomb.rct):
@@ -223,6 +249,9 @@ def main():
         if bomb is not None:
             for bomb in bombs:
                 bomb.update(screen)
+        for exp in explorers:
+            exp.update(screen)
+        explorers = [exp for exp in explorers if exp.life > 0]
         score.update(screen)#スコアをスクリーンに描画
         pg.display.update()
         tmr += 1
