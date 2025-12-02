@@ -176,19 +176,32 @@ def main():
     bombs=[]
     bombs=[Bomb((255,0,0),10)for _ in range(NUM_OF_BOMBS)]#　爆弾の数だけBombクラスのインスタンス生成
     score=Score()#スコアクラスのインスタンス生成
+    beams=[]
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 # スペースキー押下でBeamクラスのインスタンス生成
-                beam = Beam(bird)            
+                beam = Beam(bird)
+                beams.append(beam)            
         screen.blit(bg_img, [0, 0])
-        
+        for i,beam in enumerate(beams):#各ビームのあたり判定とその処理
+            if bomb is not None:
+                if beam is not None:
+                    if bomb.rct.colliderect(beam.rct):
+                        beams[i]=None
+                        score.score+=1#得点取得の処理
+                        score.update(score)
+                        pg.display.update() 
+        beams=[beam for beam in beams if beam is not None]
         for b,bomb in enumerate(bombs):
             if bomb is not None and bird.rct.colliderect(bomb.rct):
                 # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
                 bird.change_img(8, screen)
+                fonto=pg.font.Font(None,80)
+                txt=fonto.render("Game Over",True,(255,0,0))
+                screen.blit(txt,[WIDTH//2-150,HEIGHT//2])
                 pg.display.update()
                 time.sleep(1)
                 return
@@ -197,7 +210,6 @@ def main():
                 if beam is not None:
                     if beam.rct.colliderect(bomb.rct): 
                         bombs[b]=None 
-                        beam=None
                         score.score+=1#得点取得の処理
                         score.update(screen)
                         bird.change_img(9, screen)
@@ -206,7 +218,8 @@ def main():
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
         if beam !=None:
-            beam.update(screen) 
+            for beam in beams:
+                beam.update(screen) 
         if bomb is not None:
             for bomb in bombs:
                 bomb.update(screen)
